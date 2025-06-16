@@ -5,12 +5,16 @@ class SceneManager: ObservableObject {
     var scene: SCNScene
     private var boardNode: SCNNode?
     private var animalNodes: [AnimalType: SCNNode] = [:]
+    private var cardNodes: [SCNNode] = []
+    private var gridSize: Int = 3
+    private var selectedAnimals: [AnimalType] = []
+    private var highlightedCardIndex: Int?
     
     init() {
         scene = SCNScene()
         setupScene()
         createBoard()
-        createAnimalPositions()
+        setupAnimalsAndCards()
     }
     
     func setupScene() {
@@ -84,6 +88,7 @@ class SceneManager: ObservableObject {
         camera.zFar = 100
         
         let cameraNode = SCNNode()
+        cameraNode.name = "cameraNode"
         cameraNode.camera = camera
         cameraNode.position = SCNVector3(0, 8, 12)
         cameraNode.eulerAngles = SCNVector3(-0.4, 0, 0)
@@ -92,9 +97,10 @@ class SceneManager: ObservableObject {
     
     func createBoard() {
         boardNode = SCNNode()
+        boardNode?.name = "boardNode"
         
-        // ボード本体（よりカラフルに）
-        let boardGeometry = SCNCylinder(radius: 5.0, height: 0.3)
+        // ボード本体（正方形に変更）
+        let boardGeometry = SCNBox(width: 10, height: 0.3, length: 10, chamferRadius: 0.5)
         let boardMaterial = SCNMaterial()
         boardMaterial.diffuse.contents = UIColor(red: 0.98, green: 0.95, blue: 0.85, alpha: 1.0)
         boardMaterial.specular.contents = UIColor.white
@@ -105,24 +111,26 @@ class SceneManager: ObservableObject {
         board.position = SCNVector3(0, 0, 0)
         boardNode?.addChildNode(board)
         
-        // ボードの縁（カラフルな装飾）
-        let rimGeometry = SCNTube(innerRadius: 4.8, outerRadius: 5.2, height: 0.4)
-        let rimMaterial = SCNMaterial()
-        rimMaterial.diffuse.contents = UIColor(red: 0.9, green: 0.85, blue: 0.95, alpha: 1.0)
-        rimGeometry.materials = [rimMaterial]
-        
-        let rimNode = SCNNode(geometry: rimGeometry)
-        rimNode.position = SCNVector3(0, 0, 0)
-        boardNode?.addChildNode(rimNode)
-        
-        // 中心の星マーク
-        let starNode = createStarNode()
-        starNode.position = SCNVector3(0, 0.2, 0)
-        boardNode?.addChildNode(starNode)
-        
         if let boardNode = boardNode {
             scene.rootNode.addChildNode(boardNode)
         }
+    }
+    
+    func setupAnimalsAndCards() {
+        // selectedAnimalsが設定されていない場合のみランダムに選択
+        if selectedAnimals.isEmpty {
+            selectedAnimals = AnimalType.allCases.shuffled().prefix(4).map { $0 }
+        }
+        createAnimalPositions()
+        createCardGrid()
+    }
+    
+    func setSelectedAnimals(_ animals: [AnimalType]) {
+        selectedAnimals = animals
+        // 既存の動物を削除して新しい動物で再作成
+        animalNodes.values.forEach { $0.removeFromParentNode() }
+        animalNodes.removeAll()
+        createAnimalPositions()
     }
     
     func createAnimalPositions() {
@@ -130,24 +138,213 @@ class SceneManager: ObservableObject {
         animalNodes.values.forEach { $0.removeFromParentNode() }
         animalNodes.removeAll()
         
-        // 円形に配置（6匹の動物）
-        let radius: Float = 3.5
-        let angleStep = Float.pi * 2 / 6
+        // 4辺に動物を配置（上、右、下、左）
+        let positions: [(Float, Float, Float)] = [
+            (0, 0.7, -6),    // 上
+            (6, 0.7, 0),     // 右
+            (0, 0.7, 6),     // 下
+            (-6, 0.7, 0)     // 左
+        ]
         
-        for (index, animal) in AnimalType.allCases.enumerated() {
-            let angle = Float(index) * angleStep
-            let x = radius * cos(angle)
-            let z = radius * sin(angle)
-            
+        let rotations: [Float] = [
+            0,                // 上向き（デフォルト）
+            -Float.pi / 2,    // 右向き
+            Float.pi,         // 下向き
+            Float.pi / 2      // 左向き
+        ]
+        
+        for (index, animal) in selectedAnimals.enumerated() {
             let animalNode = createCuteAnimalNode(for: animal)
-            animalNode.position = SCNVector3(x, 0.7, z)
-            animalNode.eulerAngles = SCNVector3(0, -angle + Float.pi / 2, 0)  // 中心を向くように回転
+            animalNode.position = SCNVector3(positions[index].0, positions[index].1, positions[index].2)
+            animalNode.eulerAngles = SCNVector3(0, rotations[index], 0)
             
             animalNodes[animal] = animalNode
             boardNode?.addChildNode(animalNode)
         }
     }
     
+    func createCardGrid() {
+        // 既存のカードを削除
+        cardNodes.forEach { $0.removeFromParentNode() }
+        cardNodes.removeAll()
+        
+        let cardSize: Float = 1.2
+        let spacing: Float = 0.3
+        let totalSize = Float(gridSize) * cardSize + Float(gridSize - 1) * spacing
+        let startOffset = -totalSize / 2 + cardSize / 2
+        
+        for row in 0..<gridSize {
+            for col in 0..<gridSize {
+                let cardNode = createCardNode(index: row * gridSize + col)
+                
+                let x = startOffset + Float(col) * (cardSize + spacing)
+                let z = startOffset + Float(row) * (cardSize + spacing)
+                
+                cardNode.position = SCNVector3(x, 0.2, z)
+                cardNodes.append(cardNode)
+                boardNode?.addChildNode(cardNode)
+            }
+        }
+    }
+    
+    private func createCardNode(index: Int) -> SCNNode {
+        let containerNode = SCNNode()
+        containerNode.name = "card_\(index)"
+        
+        // カード本体
+        let cardGeometry = SCNBox(width: 1.2, height: 0.1, length: 1.2, chamferRadius: 0.1)
+        let cardMaterial = SCNMaterial()
+        cardMaterial.diffuse.contents = UIColor.white
+        cardMaterial.specular.contents = UIColor.white
+        cardMaterial.shininess = 0.1
+        cardGeometry.materials = [cardMaterial]
+        
+        let cardNode = SCNNode(geometry: cardGeometry)
+        containerNode.addChildNode(cardNode)
+        
+        // カードの表面に模様を追加
+        let patternGeometry = SCNBox(width: 1.0, height: 0.01, length: 1.0, chamferRadius: 0.08)
+        let patternMaterial = SCNMaterial()
+        patternMaterial.diffuse.contents = getRandomCardColor()
+        patternGeometry.materials = [patternMaterial]
+        
+        let patternNode = SCNNode(geometry: patternGeometry)
+        patternNode.position = SCNVector3(0, 0.06, 0)
+        containerNode.addChildNode(patternNode)
+        
+        // カードに番号を表示（デバッグ用、後で削除可能）
+        let textGeometry = SCNText(string: "\(index + 1)", extrusionDepth: 0.01)
+        textGeometry.font = UIFont.systemFont(ofSize: 0.3)
+        textGeometry.flatness = 0.1
+        let textMaterial = SCNMaterial()
+        textMaterial.diffuse.contents = UIColor.darkGray
+        textGeometry.materials = [textMaterial]
+        
+        let textNode = SCNNode(geometry: textGeometry)
+        textNode.position = SCNVector3(-0.15, 0.07, -0.15)
+        textNode.scale = SCNVector3(1, 1, 1)
+        containerNode.addChildNode(textNode)
+        
+        return containerNode
+    }
+    
+    private func getRandomCardColor() -> UIColor {
+        let colors = [
+            UIColor(red: 1.0, green: 0.8, blue: 0.8, alpha: 1.0),
+            UIColor(red: 0.8, green: 1.0, blue: 0.8, alpha: 1.0),
+            UIColor(red: 0.8, green: 0.8, blue: 1.0, alpha: 1.0),
+            UIColor(red: 1.0, green: 1.0, blue: 0.8, alpha: 1.0),
+            UIColor(red: 1.0, green: 0.8, blue: 1.0, alpha: 1.0),
+            UIColor(red: 0.8, green: 1.0, blue: 1.0, alpha: 1.0)
+        ]
+        return colors.randomElement() ?? UIColor.white
+    }
+    
+    func updateForDifficulty(gridSize: Int) {
+        self.gridSize = gridSize
+        // 動物は再選択せず、カードグリッドのみ更新
+        createCardGrid()
+    }
+    
+    func highlightCard(at index: Int) {
+        // 前の点滅を停止
+        if let previousIndex = highlightedCardIndex,
+           previousIndex < cardNodes.count {
+            cardNodes[previousIndex].removeAllActions()
+            cardNodes[previousIndex].opacity = 1.0
+        }
+        
+        // 新しいカードを点滅
+        if index < cardNodes.count {
+            highlightedCardIndex = index
+            let fadeIn = SCNAction.fadeIn(duration: 0.3)
+            let fadeOut = SCNAction.fadeOut(duration: 0.3)
+            let pulse = SCNAction.sequence([fadeOut, fadeIn])
+            let repeatPulse = SCNAction.repeatForever(pulse)
+            
+            cardNodes[index].runAction(repeatPulse)
+        }
+    }
+    
+    func getSelectedAnimals() -> [AnimalType] {
+        return selectedAnimals
+    }
+    
+    func getAnimalPosition(for animal: AnimalType) -> Int? {
+        return selectedAnimals.firstIndex(of: animal)
+    }
+    
+    // スワイプによる視点変更のためのメソッド
+    func switchToAnimalView(animal: AnimalType) {
+        guard let animalNode = animalNodes[animal] else { return }
+        
+        // カメラを動物の視点に移動
+        let camera = scene.rootNode.childNode(withName: "cameraNode", recursively: true) ?? scene.rootNode.childNodes.first { $0.camera != nil }
+        
+        guard let cameraNode = camera else { return }
+        
+        // 動物の位置を取得
+        let animalPosition = animalNode.worldPosition
+        
+        // カメラを動物の位置に配置（少し後ろに下がった位置）
+        let cameraDistance: Float = 3.0  // 動物から少し後ろに下がる距離
+        let cameraHeight: Float = 2.5    // カメラの高さ
+        
+        // ボードの中心（0, 0, 0）への方向ベクトルを計算
+        let directionToCenter = SCNVector3(
+            -animalPosition.x,
+            0,
+            -animalPosition.z
+        )
+        
+        // 方向ベクトルを正規化
+        let length = sqrt(directionToCenter.x * directionToCenter.x + directionToCenter.z * directionToCenter.z)
+        let normalizedDirection = SCNVector3(
+            directionToCenter.x / length,
+            0,
+            directionToCenter.z / length
+        )
+        
+        // カメラの位置を計算（動物の位置から少し後ろに下がった位置）
+        let cameraPosition = SCNVector3(
+            animalPosition.x - normalizedDirection.x * cameraDistance,
+            animalPosition.y + cameraHeight,
+            animalPosition.z - normalizedDirection.z * cameraDistance
+        )
+        
+        // カメラの向きを計算（中央を見る）
+        let lookAtCenter = SCNLookAtConstraint(target: boardNode)
+        lookAtCenter.isGimbalLockEnabled = true
+        
+        // アニメーションでカメラを移動
+        SCNTransaction.begin()
+        SCNTransaction.animationDuration = 0.5
+        
+        cameraNode.position = cameraPosition
+        cameraNode.constraints = [lookAtCenter]
+        
+        SCNTransaction.commit()
+    }
+    
+    func resetCameraView() {
+        let camera = scene.rootNode.childNode(withName: "cameraNode", recursively: true) ?? scene.rootNode.childNodes.first { $0.camera != nil }
+        
+        guard let cameraNode = camera else { return }
+        
+        // カメラの制約をクリア
+        cameraNode.constraints = []
+        
+        // デフォルトのカメラ位置に戻す
+        SCNTransaction.begin()
+        SCNTransaction.animationDuration = 0.5
+        
+        cameraNode.position = SCNVector3(0, 8, 12)
+        cameraNode.eulerAngles = SCNVector3(-0.4, 0, 0)
+        
+        SCNTransaction.commit()
+    }
+    
+    // 既存のヘルパーメソッド
     private func createCuteAnimalNode(for animal: AnimalType) -> SCNNode {
         let containerNode = SCNNode()
         containerNode.name = animal.rawValue
@@ -202,470 +399,465 @@ class SceneManager: ObservableObject {
         return node
     }
     
+    // 動物作成メソッド（前回のコードから継続）
     private func createCuteRabbit(node: SCNNode) {
-        // うさぎ：白い楕円体 with 長い耳
-        let bodyGeometry = SCNSphere(radius: 0.45)
-        let bodyMaterial = SCNMaterial()
-        bodyMaterial.diffuse.contents = UIColor(red: 1.0, green: 0.98, blue: 0.98, alpha: 1.0)
-        bodyMaterial.specular.contents = UIColor.white
-        bodyMaterial.shininess = 0.3
-        bodyGeometry.materials = [bodyMaterial]
-        
-        let bodyNode = SCNNode(geometry: bodyGeometry)
-        bodyNode.position = SCNVector3(0, 0, 0)
-        bodyNode.scale = SCNVector3(1.0, 1.2, 0.9)
-        node.addChildNode(bodyNode)
-        
-        // 頭
-        let headGeometry = SCNSphere(radius: 0.35)
-        let headNode = SCNNode(geometry: headGeometry)
-        headNode.position = SCNVector3(0, 0.35, 0.1)
-        headNode.geometry?.materials = [bodyMaterial]
-        node.addChildNode(headNode)
-        
-        // 耳（よりかわいく）
-        for i in 0..<2 {
-            let earContainer = SCNNode()
-            
-            // 外側の耳
-            let earGeometry = SCNCapsule(capRadius: 0.08, height: 0.5)
-            earGeometry.materials = [bodyMaterial]
-            let earNode = SCNNode(geometry: earGeometry)
-            
-            // 内側の耳（ピンク）
-            let innerEarGeometry = SCNCapsule(capRadius: 0.05, height: 0.35)
-            let innerEarMaterial = SCNMaterial()
-            innerEarMaterial.diffuse.contents = UIColor(red: 1.0, green: 0.8, blue: 0.85, alpha: 1.0)
-            innerEarGeometry.materials = [innerEarMaterial]
-            
-            let innerEarNode = SCNNode(geometry: innerEarGeometry)
-            innerEarNode.position = SCNVector3(0, 0, 0.02)
-            earNode.addChildNode(innerEarNode)
-            
-            let xOffset: Float = (i == 0) ? -0.15 : 0.15
-            earContainer.position = SCNVector3(xOffset, 0.65, -0.05)
-            earContainer.eulerAngles = SCNVector3(-0.1, 0, Float.pi * 0.08 * (i == 0 ? 1 : -1))
-            earContainer.addChildNode(earNode)
-            
-            node.addChildNode(earContainer)
-        }
-        
-        // 目（キラキラした黒い目）
-        for i in 0..<2 {
-            createCuteEye(parent: node, 
-                         position: SCNVector3((i == 0) ? -0.12 : 0.12, 0.38, 0.32),
-                         size: 0.06)
-        }
-        
-        // 鼻（ピンクの小さな球）
-        let noseGeometry = SCNSphere(radius: 0.04)
-        let noseMaterial = SCNMaterial()
-        noseMaterial.diffuse.contents = UIColor(red: 1.0, green: 0.7, blue: 0.75, alpha: 1.0)
-        noseGeometry.materials = [noseMaterial]
-        
-        let noseNode = SCNNode(geometry: noseGeometry)
-        noseNode.position = SCNVector3(0, 0.25, 0.4)
-        node.addChildNode(noseNode)
-        
-        // しっぽ（丸いふわふわ）
-        let tailGeometry = SCNSphere(radius: 0.15)
-        tailGeometry.materials = [bodyMaterial]
-        let tailNode = SCNNode(geometry: tailGeometry)
-        tailNode.position = SCNVector3(0, -0.1, -0.4)
-        node.addChildNode(tailNode)
-    }
-    
-    private func createCuteBear(node: SCNNode) {
-        // くま：茶色い丸っこい体
-        let bodyMaterial = SCNMaterial()
-        bodyMaterial.diffuse.contents = UIColor(red: 0.65, green: 0.45, blue: 0.3, alpha: 1.0)
-        bodyMaterial.specular.contents = UIColor(red: 0.7, green: 0.5, blue: 0.35, alpha: 1.0)
-        bodyMaterial.shininess = 0.2
-        
         // 体
         let bodyGeometry = SCNSphere(radius: 0.5)
+        let bodyMaterial = SCNMaterial()
+        bodyMaterial.diffuse.contents = UIColor(red: 1.0, green: 0.98, blue: 0.95, alpha: 1.0)
         bodyGeometry.materials = [bodyMaterial]
+        
         let bodyNode = SCNNode(geometry: bodyGeometry)
         bodyNode.position = SCNVector3(0, 0, 0)
-        bodyNode.scale = SCNVector3(1.1, 1.0, 0.9)
         node.addChildNode(bodyNode)
         
         // 頭
         let headGeometry = SCNSphere(radius: 0.4)
         headGeometry.materials = [bodyMaterial]
+        
         let headNode = SCNNode(geometry: headGeometry)
-        headNode.position = SCNVector3(0, 0.35, 0.1)
+        headNode.position = SCNVector3(0, 0.6, 0)
         node.addChildNode(headNode)
         
-        // 耳（丸くてかわいい）
-        for i in 0..<2 {
-            let earGeometry = SCNSphere(radius: 0.12)
-            earGeometry.materials = [bodyMaterial]
-            let earNode = SCNNode(geometry: earGeometry)
-            
-            let xOffset: Float = (i == 0) ? -0.25 : 0.25
-            earNode.position = SCNVector3(xOffset, 0.55, -0.05)
-            node.addChildNode(earNode)
-            
-            // 耳の内側
-            let innerEarGeometry = SCNSphere(radius: 0.06)
-            let innerEarMaterial = SCNMaterial()
-            innerEarMaterial.diffuse.contents = UIColor(red: 0.75, green: 0.55, blue: 0.4, alpha: 1.0)
-            innerEarGeometry.materials = [innerEarMaterial]
-            
-            let innerEarNode = SCNNode(geometry: innerEarGeometry)
-            innerEarNode.position = SCNVector3(0, 0, 0.08)
-            earNode.addChildNode(innerEarNode)
-        }
+        // 耳
+        let earGeometry = SCNCapsule(capRadius: 0.08, height: 0.5)
+        let earMaterial = SCNMaterial()
+        earMaterial.diffuse.contents = UIColor(red: 1.0, green: 0.95, blue: 0.9, alpha: 1.0)
+        earGeometry.materials = [earMaterial]
         
-        // おなか（明るい茶色）
-        let bellyGeometry = SCNSphere(radius: 0.35)
-        let bellyMaterial = SCNMaterial()
-        bellyMaterial.diffuse.contents = UIColor(red: 0.75, green: 0.55, blue: 0.4, alpha: 1.0)
-        bellyGeometry.materials = [bellyMaterial]
+        let leftEar = SCNNode(geometry: earGeometry)
+        leftEar.position = SCNVector3(-0.15, 0.9, 0)
+        leftEar.eulerAngles = SCNVector3(0, 0, 0.2)
+        node.addChildNode(leftEar)
         
-        let bellyNode = SCNNode(geometry: bellyGeometry)
-        bellyNode.position = SCNVector3(0, -0.05, 0.25)
-        bellyNode.scale = SCNVector3(0.8, 0.7, 0.5)
-        node.addChildNode(bellyNode)
+        let rightEar = SCNNode(geometry: earGeometry)
+        rightEar.position = SCNVector3(0.15, 0.9, 0)
+        rightEar.eulerAngles = SCNVector3(0, 0, -0.2)
+        node.addChildNode(rightEar)
         
         // 目
-        for i in 0..<2 {
-            createCuteEye(parent: node,
-                         position: SCNVector3((i == 0) ? -0.12 : 0.12, 0.35, 0.35),
-                         size: 0.07)
-        }
+        createEyes(parentNode: node, yPosition: 0.65, zPosition: 0.35)
         
-        // 鼻（黒い楕円）
+        // 鼻
+        let noseGeometry = SCNSphere(radius: 0.05)
+        let noseMaterial = SCNMaterial()
+        noseMaterial.diffuse.contents = UIColor(red: 1.0, green: 0.8, blue: 0.8, alpha: 1.0)
+        noseGeometry.materials = [noseMaterial]
+        
+        let noseNode = SCNNode(geometry: noseGeometry)
+        noseNode.position = SCNVector3(0, 0.55, 0.4)
+        node.addChildNode(noseNode)
+    }
+    
+    private func createCuteBear(node: SCNNode) {
+        // 体
+        let bodyGeometry = SCNSphere(radius: 0.6)
+        let bodyMaterial = SCNMaterial()
+        bodyMaterial.diffuse.contents = UIColor(red: 0.6, green: 0.4, blue: 0.2, alpha: 1.0)
+        bodyGeometry.materials = [bodyMaterial]
+        
+        let bodyNode = SCNNode(geometry: bodyGeometry)
+        bodyNode.position = SCNVector3(0, 0, 0)
+        node.addChildNode(bodyNode)
+        
+        // 頭
+        let headGeometry = SCNSphere(radius: 0.45)
+        headGeometry.materials = [bodyMaterial]
+        
+        let headNode = SCNNode(geometry: headGeometry)
+        headNode.position = SCNVector3(0, 0.65, 0)
+        node.addChildNode(headNode)
+        
+        // 耳
+        let earGeometry = SCNSphere(radius: 0.15)
+        earGeometry.materials = [bodyMaterial]
+        
+        let leftEar = SCNNode(geometry: earGeometry)
+        leftEar.position = SCNVector3(-0.3, 0.9, 0)
+        node.addChildNode(leftEar)
+        
+        let rightEar = SCNNode(geometry: earGeometry)
+        rightEar.position = SCNVector3(0.3, 0.9, 0)
+        node.addChildNode(rightEar)
+        
+        // 鼻先
+        let snoutGeometry = SCNSphere(radius: 0.2)
+        let snoutMaterial = SCNMaterial()
+        snoutMaterial.diffuse.contents = UIColor(red: 0.5, green: 0.35, blue: 0.15, alpha: 1.0)
+        snoutGeometry.materials = [snoutMaterial]
+        
+        let snoutNode = SCNNode(geometry: snoutGeometry)
+        snoutNode.position = SCNVector3(0, 0.55, 0.35)
+        node.addChildNode(snoutNode)
+        
+        // 目
+        createEyes(parentNode: node, yPosition: 0.7, zPosition: 0.35)
+        
+        // 鼻
         let noseGeometry = SCNSphere(radius: 0.08)
         let noseMaterial = SCNMaterial()
         noseMaterial.diffuse.contents = UIColor.black
         noseGeometry.materials = [noseMaterial]
         
         let noseNode = SCNNode(geometry: noseGeometry)
-        noseNode.position = SCNVector3(0, 0.2, 0.42)
-        noseNode.scale = SCNVector3(1.2, 0.8, 0.8)
+        noseNode.position = SCNVector3(0, 0.55, 0.5)
         node.addChildNode(noseNode)
     }
     
     private func createCuteElephant(node: SCNNode) {
-        // ぞう：グレーの大きな体
-        let bodyMaterial = SCNMaterial()
-        bodyMaterial.diffuse.contents = UIColor(red: 0.7, green: 0.7, blue: 0.75, alpha: 1.0)
-        bodyMaterial.specular.contents = UIColor(white: 0.8, alpha: 1.0)
-        bodyMaterial.shininess = 0.2
-        
         // 体
-        let bodyGeometry = SCNSphere(radius: 0.55)
+        let bodyGeometry = SCNBox(width: 1.0, height: 0.8, length: 0.8, chamferRadius: 0.3)
+        let bodyMaterial = SCNMaterial()
+        bodyMaterial.diffuse.contents = UIColor(red: 0.7, green: 0.7, blue: 0.8, alpha: 1.0)
         bodyGeometry.materials = [bodyMaterial]
+        
         let bodyNode = SCNNode(geometry: bodyGeometry)
         bodyNode.position = SCNVector3(0, 0, 0)
-        bodyNode.scale = SCNVector3(1.2, 1.0, 1.0)
         node.addChildNode(bodyNode)
         
         // 頭
-        let headGeometry = SCNSphere(radius: 0.45)
+        let headGeometry = SCNSphere(radius: 0.5)
         headGeometry.materials = [bodyMaterial]
+        
         let headNode = SCNNode(geometry: headGeometry)
-        headNode.position = SCNVector3(0, 0.35, 0.15)
+        headNode.position = SCNVector3(0, 0.7, 0)
         node.addChildNode(headNode)
         
-        // 鼻（シンプルなチューブ）
+        // 耳（大きな扇形）
+        let earGeometry = SCNBox(width: 0.4, height: 0.5, length: 0.1, chamferRadius: 0.2)
+        earGeometry.materials = [bodyMaterial]
+        
+        let leftEar = SCNNode(geometry: earGeometry)
+        leftEar.position = SCNVector3(-0.5, 0.7, 0)
+        leftEar.eulerAngles = SCNVector3(0, -0.3, 0)
+        node.addChildNode(leftEar)
+        
+        let rightEar = SCNNode(geometry: earGeometry)
+        rightEar.position = SCNVector3(0.5, 0.7, 0)
+        rightEar.eulerAngles = SCNVector3(0, 0.3, 0)
+        node.addChildNode(rightEar)
+        
+        // 鼻（ぞうの鼻）
         let trunkGeometry = SCNCylinder(radius: 0.15, height: 0.8)
         trunkGeometry.materials = [bodyMaterial]
+        
         let trunkNode = SCNNode(geometry: trunkGeometry)
-        trunkNode.position = SCNVector3(0, -0.1, 0.5)
-        trunkNode.eulerAngles = SCNVector3(Float.pi / 3, 0, 0)
+        trunkNode.position = SCNVector3(0, 0.3, 0.4)
+        trunkNode.eulerAngles = SCNVector3(Float.pi/4, 0, 0)
         node.addChildNode(trunkNode)
         
-        // 鼻の先
-        let trunkTipGeometry = SCNSphere(radius: 0.15)
-        trunkTipGeometry.materials = [bodyMaterial]
-        let trunkTipNode = SCNNode(geometry: trunkTipGeometry)
-        trunkTipNode.position = SCNVector3(0, -0.4, 0)
-        trunkNode.addChildNode(trunkTipNode)
-        
-        // 大きな耳
-        for i in 0..<2 {
-            let earGeometry = SCNBox(width: 0.5, height: 0.6, length: 0.1, chamferRadius: 0.2)
-            let earMaterial = SCNMaterial()
-            earMaterial.diffuse.contents = UIColor(red: 0.75, green: 0.75, blue: 0.8, alpha: 1.0)
-            earGeometry.materials = [earMaterial]
-            
-            let earNode = SCNNode(geometry: earGeometry)
-            let xOffset: Float = (i == 0) ? -0.45 : 0.45
-            earNode.position = SCNVector3(xOffset, 0.3, 0)
-            earNode.eulerAngles = SCNVector3(0, (i == 0) ? -0.3 : 0.3, 0)
-            node.addChildNode(earNode)
-        }
-        
         // 目
-        for i in 0..<2 {
-            createCuteEye(parent: node,
-                         position: SCNVector3((i == 0) ? -0.15 : 0.15, 0.4, 0.4),
-                         size: 0.06)
-        }
+        createEyes(parentNode: node, yPosition: 0.8, zPosition: 0.4)
     }
     
     private func createCuteGiraffe(node: SCNNode) {
-        // きりん：黄色い体に茶色の模様
-        let bodyMaterial = SCNMaterial()
-        bodyMaterial.diffuse.contents = UIColor(red: 1.0, green: 0.9, blue: 0.5, alpha: 1.0)
-        bodyMaterial.specular.contents = UIColor(red: 1.0, green: 0.95, blue: 0.7, alpha: 1.0)
-        bodyMaterial.shininess = 0.3
-        
         // 体
-        let bodyGeometry = SCNSphere(radius: 0.4)
+        let bodyGeometry = SCNBox(width: 0.6, height: 0.8, length: 0.5, chamferRadius: 0.2)
+        let bodyMaterial = SCNMaterial()
+        bodyMaterial.diffuse.contents = UIColor(red: 1.0, green: 0.9, blue: 0.6, alpha: 1.0)
         bodyGeometry.materials = [bodyMaterial]
+        
         let bodyNode = SCNNode(geometry: bodyGeometry)
-        bodyNode.position = SCNVector3(0, -0.1, 0)
+        bodyNode.position = SCNVector3(0, 0, 0)
         node.addChildNode(bodyNode)
         
-        // 首（長い）
-        let neckGeometry = SCNCylinder(radius: 0.15, height: 0.8)
+        // 首
+        let neckGeometry = SCNCylinder(radius: 0.2, height: 1.0)
         neckGeometry.materials = [bodyMaterial]
+        
         let neckNode = SCNNode(geometry: neckGeometry)
-        neckNode.position = SCNVector3(0, 0.4, 0)
+        neckNode.position = SCNVector3(0, 0.8, 0)
         node.addChildNode(neckNode)
         
         // 頭
-        let headGeometry = SCNSphere(radius: 0.25)
+        let headGeometry = SCNSphere(radius: 0.3)
         headGeometry.materials = [bodyMaterial]
+        
         let headNode = SCNNode(geometry: headGeometry)
-        headNode.position = SCNVector3(0, 0.9, 0.1)
+        headNode.position = SCNVector3(0, 1.4, 0)
         node.addChildNode(headNode)
         
-        // 角（小さな突起）
-        for i in 0..<2 {
-            let hornGeometry = SCNCone(topRadius: 0, bottomRadius: 0.04, height: 0.15)
-            hornGeometry.materials = [bodyMaterial]
-            let hornNode = SCNNode(geometry: hornGeometry)
-            
-            let xOffset: Float = (i == 0) ? -0.08 : 0.08
-            hornNode.position = SCNVector3(xOffset, 1.05, -0.05)
-            node.addChildNode(hornNode)
-            
-            // 角の先の球
-            let hornTipGeometry = SCNSphere(radius: 0.04)
-            let hornTipMaterial = SCNMaterial()
-            hornTipMaterial.diffuse.contents = UIColor(red: 0.6, green: 0.4, blue: 0.2, alpha: 1.0)
-            hornTipGeometry.materials = [hornTipMaterial]
-            
-            let hornTipNode = SCNNode(geometry: hornTipGeometry)
-            hornTipNode.position = SCNVector3(0, 0.08, 0)
-            hornNode.addChildNode(hornTipNode)
-        }
+        // 角（つの）
+        let hornGeometry = SCNCone(topRadius: 0, bottomRadius: 0.05, height: 0.2)
+        let hornMaterial = SCNMaterial()
+        hornMaterial.diffuse.contents = UIColor(red: 0.6, green: 0.4, blue: 0.2, alpha: 1.0)
+        hornGeometry.materials = [hornMaterial]
         
-        // 模様（茶色の斑点）
+        let leftHorn = SCNNode(geometry: hornGeometry)
+        leftHorn.position = SCNVector3(-0.1, 1.6, 0)
+        node.addChildNode(leftHorn)
+        
+        let rightHorn = SCNNode(geometry: hornGeometry)
+        rightHorn.position = SCNVector3(0.1, 1.6, 0)
+        node.addChildNode(rightHorn)
+        
+        // 目
+        createEyes(parentNode: node, yPosition: 1.4, zPosition: 0.25)
+        
+        // 模様（スポット）
         for _ in 0..<5 {
-            let spotGeometry = SCNSphere(radius: CGFloat.random(in: 0.05...0.1))
+            let spotGeometry = SCNSphere(radius: 0.1)
             let spotMaterial = SCNMaterial()
             spotMaterial.diffuse.contents = UIColor(red: 0.6, green: 0.4, blue: 0.2, alpha: 1.0)
             spotGeometry.materials = [spotMaterial]
             
             let spotNode = SCNNode(geometry: spotGeometry)
-            let angle = Float.random(in: 0...(Float.pi * 2))
-            let height = Float.random(in: -0.3...0.6)
-            let radius = Float.random(in: 0.15...0.25)
-            
             spotNode.position = SCNVector3(
-                radius * cos(angle),
-                height,
-                radius * sin(angle) + 0.05
+                Float.random(in: -0.25...0.25),
+                Float.random(in: -0.3...1.0),
+                0.26
             )
             node.addChildNode(spotNode)
-        }
-        
-        // 目
-        for i in 0..<2 {
-            createCuteEye(parent: node,
-                         position: SCNVector3((i == 0) ? -0.08 : 0.08, 0.9, 0.25),
-                         size: 0.05)
         }
     }
     
     private func createCuteLion(node: SCNNode) {
-        // らいおん：黄金色の体にたてがみ
-        let bodyMaterial = SCNMaterial()
-        bodyMaterial.diffuse.contents = UIColor(red: 0.9, green: 0.7, blue: 0.4, alpha: 1.0)
-        bodyMaterial.specular.contents = UIColor(red: 1.0, green: 0.8, blue: 0.5, alpha: 1.0)
-        bodyMaterial.shininess = 0.3
-        
         // 体
-        let bodyGeometry = SCNSphere(radius: 0.45)
+        let bodyGeometry = SCNSphere(radius: 0.6)
+        let bodyMaterial = SCNMaterial()
+        bodyMaterial.diffuse.contents = UIColor(red: 1.0, green: 0.8, blue: 0.4, alpha: 1.0)
         bodyGeometry.materials = [bodyMaterial]
+        
         let bodyNode = SCNNode(geometry: bodyGeometry)
         bodyNode.position = SCNVector3(0, 0, 0)
         node.addChildNode(bodyNode)
         
         // 頭
-        let headGeometry = SCNSphere(radius: 0.35)
+        let headGeometry = SCNSphere(radius: 0.45)
         headGeometry.materials = [bodyMaterial]
+        
         let headNode = SCNNode(geometry: headGeometry)
-        headNode.position = SCNVector3(0, 0.35, 0.15)
+        headNode.position = SCNVector3(0, 0.7, 0)
         node.addChildNode(headNode)
         
-        // たてがみ（ふわふわの円）
-        let maneGeometry = SCNTorus(ringRadius: 0.4, pipeRadius: 0.15)
+        // たてがみ
+        let maneGeometry = SCNTorus(ringRadius: 0.5, pipeRadius: 0.2)
         let maneMaterial = SCNMaterial()
-        maneMaterial.diffuse.contents = UIColor(red: 0.7, green: 0.5, blue: 0.3, alpha: 1.0)
+        maneMaterial.diffuse.contents = UIColor(red: 0.8, green: 0.5, blue: 0.2, alpha: 1.0)
         maneGeometry.materials = [maneMaterial]
         
         let maneNode = SCNNode(geometry: maneGeometry)
-        maneNode.position = SCNVector3(0, 0.35, 0.1)
-        maneNode.eulerAngles = SCNVector3(Float.pi / 2, 0, 0)
+        maneNode.position = SCNVector3(0, 0.7, 0)
+        maneNode.eulerAngles = SCNVector3(Float.pi/2, 0, 0)
         node.addChildNode(maneNode)
         
         // 耳
-        for i in 0..<2 {
-            let earGeometry = SCNCone(topRadius: 0, bottomRadius: 0.08, height: 0.12)
-            earGeometry.materials = [bodyMaterial]
-            let earNode = SCNNode(geometry: earGeometry)
-            
-            let xOffset: Float = (i == 0) ? -0.2 : 0.2
-            earNode.position = SCNVector3(xOffset, 0.55, 0)
-            earNode.eulerAngles = SCNVector3(0, 0, Float.pi)
-            node.addChildNode(earNode)
-        }
+        let earGeometry = SCNPyramid(width: 0.2, height: 0.2, length: 0.1)
+        earGeometry.materials = [bodyMaterial]
+        
+        let leftEar = SCNNode(geometry: earGeometry)
+        leftEar.position = SCNVector3(-0.3, 1.0, 0)
+        leftEar.eulerAngles = SCNVector3(0, 0, -Float.pi/4)
+        node.addChildNode(leftEar)
+        
+        let rightEar = SCNNode(geometry: earGeometry)
+        rightEar.position = SCNVector3(0.3, 1.0, 0)
+        rightEar.eulerAngles = SCNVector3(0, 0, Float.pi/4)
+        node.addChildNode(rightEar)
         
         // 目
-        for i in 0..<2 {
-            createCuteEye(parent: node,
-                         position: SCNVector3((i == 0) ? -0.1 : 0.1, 0.35, 0.35),
-                         size: 0.06)
-        }
+        createEyes(parentNode: node, yPosition: 0.75, zPosition: 0.4)
         
-        // 鼻（茶色い三角）
-        let noseGeometry = SCNCone(topRadius: 0, bottomRadius: 0.06, height: 0.08)
+        // 鼻
+        let noseGeometry = SCNPyramid(width: 0.15, height: 0.1, length: 0.15)
         let noseMaterial = SCNMaterial()
-        noseMaterial.diffuse.contents = UIColor(red: 0.5, green: 0.3, blue: 0.2, alpha: 1.0)
+        noseMaterial.diffuse.contents = UIColor(red: 0.2, green: 0.1, blue: 0.1, alpha: 1.0)
         noseGeometry.materials = [noseMaterial]
         
         let noseNode = SCNNode(geometry: noseGeometry)
-        noseNode.position = SCNVector3(0, 0.25, 0.45)
-        noseNode.eulerAngles = SCNVector3(Float.pi / 2, 0, 0)
+        noseNode.position = SCNVector3(0, 0.65, 0.45)
+        noseNode.eulerAngles = SCNVector3(Float.pi/2, 0, 0)
         node.addChildNode(noseNode)
     }
     
     private func createCutePanda(node: SCNNode) {
-        // ぱんだ：白と黒のかわいい体
+        // 体（白）
+        let bodyGeometry = SCNSphere(radius: 0.6)
         let whiteMaterial = SCNMaterial()
         whiteMaterial.diffuse.contents = UIColor(red: 0.98, green: 0.98, blue: 0.98, alpha: 1.0)
-        whiteMaterial.specular.contents = UIColor.white
-        whiteMaterial.shininess = 0.3
-        
-        let blackMaterial = SCNMaterial()
-        blackMaterial.diffuse.contents = UIColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 1.0)
-        blackMaterial.specular.contents = UIColor(white: 0.3, alpha: 1.0)
-        blackMaterial.shininess = 0.2
-        
-        // 体（白）
-        let bodyGeometry = SCNSphere(radius: 0.5)
         bodyGeometry.materials = [whiteMaterial]
+        
         let bodyNode = SCNNode(geometry: bodyGeometry)
         bodyNode.position = SCNVector3(0, 0, 0)
-        bodyNode.scale = SCNVector3(1.0, 1.1, 0.9)
         node.addChildNode(bodyNode)
         
         // 頭（白）
-        let headGeometry = SCNSphere(radius: 0.4)
+        let headGeometry = SCNSphere(radius: 0.45)
         headGeometry.materials = [whiteMaterial]
+        
         let headNode = SCNNode(geometry: headGeometry)
-        headNode.position = SCNVector3(0, 0.35, 0.1)
+        headNode.position = SCNVector3(0, 0.65, 0)
         node.addChildNode(headNode)
         
         // 耳（黒）
-        for i in 0..<2 {
-            let earGeometry = SCNSphere(radius: 0.15)
-            earGeometry.materials = [blackMaterial]
-            let earNode = SCNNode(geometry: earGeometry)
-            
-            let xOffset: Float = (i == 0) ? -0.25 : 0.25
-            earNode.position = SCNVector3(xOffset, 0.55, -0.05)
-            node.addChildNode(earNode)
-        }
+        let blackMaterial = SCNMaterial()
+        blackMaterial.diffuse.contents = UIColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 1.0)
         
-        // 目の周りの黒い模様
-        for i in 0..<2 {
-            let eyePatchGeometry = SCNSphere(radius: 0.12)
-            eyePatchGeometry.materials = [blackMaterial]
-            let eyePatchNode = SCNNode(geometry: eyePatchGeometry)
-            
-            let xOffset: Float = (i == 0) ? -0.12 : 0.12
-            eyePatchNode.position = SCNVector3(xOffset, 0.35, 0.32)
-            eyePatchNode.scale = SCNVector3(1.0, 1.2, 0.8)
-            node.addChildNode(eyePatchNode)
-            
-            // 目
-            createCuteEye(parent: node,
-                         position: SCNVector3(xOffset, 0.35, 0.38),
-                         size: 0.05)
-        }
+        let earGeometry = SCNSphere(radius: 0.15)
+        earGeometry.materials = [blackMaterial]
         
-        // 鼻（黒）
-        let noseGeometry = SCNSphere(radius: 0.06)
+        let leftEar = SCNNode(geometry: earGeometry)
+        leftEar.position = SCNVector3(-0.3, 0.9, 0)
+        node.addChildNode(leftEar)
+        
+        let rightEar = SCNNode(geometry: earGeometry)
+        rightEar.position = SCNVector3(0.3, 0.9, 0)
+        node.addChildNode(rightEar)
+        
+        // 目の周り（黒）
+        let eyePatchGeometry = SCNSphere(radius: 0.15)
+        eyePatchGeometry.materials = [blackMaterial]
+        
+        let leftEyePatch = SCNNode(geometry: eyePatchGeometry)
+        leftEyePatch.position = SCNVector3(-0.15, 0.7, 0.35)
+        leftEyePatch.scale = SCNVector3(1.2, 1, 0.5)
+        node.addChildNode(leftEyePatch)
+        
+        let rightEyePatch = SCNNode(geometry: eyePatchGeometry)
+        rightEyePatch.position = SCNVector3(0.15, 0.7, 0.35)
+        rightEyePatch.scale = SCNVector3(1.2, 1, 0.5)
+        node.addChildNode(rightEyePatch)
+        
+        // 目
+        createEyes(parentNode: node, yPosition: 0.7, zPosition: 0.4, eyeColor: UIColor.white)
+        
+        // 鼻
+        let noseGeometry = SCNSphere(radius: 0.08)
         noseGeometry.materials = [blackMaterial]
+        
         let noseNode = SCNNode(geometry: noseGeometry)
-        noseNode.position = SCNVector3(0, 0.25, 0.42)
+        noseNode.position = SCNVector3(0, 0.6, 0.45)
         node.addChildNode(noseNode)
         
-        // 手足（黒）
-        for i in 0..<2 {
-            let armGeometry = SCNSphere(radius: 0.2)
-            armGeometry.materials = [blackMaterial]
-            let armNode = SCNNode(geometry: armGeometry)
+        // 腕（黒）
+        let armGeometry = SCNSphere(radius: 0.25)
+        armGeometry.materials = [blackMaterial]
+        
+        let leftArm = SCNNode(geometry: armGeometry)
+        leftArm.position = SCNVector3(-0.5, 0, 0)
+        node.addChildNode(leftArm)
+        
+        let rightArm = SCNNode(geometry: armGeometry)
+        rightArm.position = SCNVector3(0.5, 0, 0)
+        node.addChildNode(rightArm)
+    }
+    
+    // ヘルパーメソッド
+    private func createEyes(parentNode: SCNNode, yPosition: Float, zPosition: Float, eyeColor: UIColor = UIColor.black) {
+        let eyeGeometry = SCNSphere(radius: 0.05)
+        let eyeMaterial = SCNMaterial()
+        eyeMaterial.diffuse.contents = eyeColor
+        eyeGeometry.materials = [eyeMaterial]
+        
+        let leftEye = SCNNode(geometry: eyeGeometry)
+        leftEye.position = SCNVector3(-0.1, yPosition, zPosition)
+        parentNode.addChildNode(leftEye)
+        
+        let rightEye = SCNNode(geometry: eyeGeometry)
+        rightEye.position = SCNVector3(0.1, yPosition, zPosition)
+        parentNode.addChildNode(rightEye)
+        
+        // 目の輝き
+        if eyeColor != UIColor.white {
+            let highlightGeometry = SCNSphere(radius: 0.02)
+            let highlightMaterial = SCNMaterial()
+            highlightMaterial.diffuse.contents = UIColor.white
+            highlightGeometry.materials = [highlightMaterial]
             
-            let xOffset: Float = (i == 0) ? -0.35 : 0.35
-            armNode.position = SCNVector3(xOffset, -0.1, 0.2)
-            armNode.scale = SCNVector3(0.8, 1.2, 0.8)
-            node.addChildNode(armNode)
+            let leftHighlight = SCNNode(geometry: highlightGeometry)
+            leftHighlight.position = SCNVector3(-0.08, yPosition + 0.02, zPosition + 0.03)
+            parentNode.addChildNode(leftHighlight)
+            
+            let rightHighlight = SCNNode(geometry: highlightGeometry)
+            rightHighlight.position = SCNVector3(0.12, yPosition + 0.02, zPosition + 0.03)
+            parentNode.addChildNode(rightHighlight)
         }
     }
     
-    private func createCuteEye(parent: SCNNode, position: SCNVector3, size: CGFloat) {
-        // 目の白い部分
-        let eyeWhiteGeometry = SCNSphere(radius: size * 0.8)
-        let eyeWhiteMaterial = SCNMaterial()
-        eyeWhiteMaterial.diffuse.contents = UIColor.white
-        eyeWhiteGeometry.materials = [eyeWhiteMaterial]
+    private func getAnimalAccentColor(for animal: AnimalType) -> UIColor {
+        switch animal {
+        case .rabbit:
+            return UIColor(red: 1.0, green: 0.8, blue: 0.8, alpha: 1.0)
+        case .bear:
+            return UIColor(red: 0.6, green: 0.4, blue: 0.2, alpha: 1.0)
+        case .elephant:
+            return UIColor(red: 0.6, green: 0.6, blue: 0.7, alpha: 1.0)
+        case .giraffe:
+            return UIColor(red: 1.0, green: 0.8, blue: 0.4, alpha: 1.0)
+        case .lion:
+            return UIColor(red: 1.0, green: 0.7, blue: 0.3, alpha: 1.0)
+        case .panda:
+            return UIColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0)
+        }
+    }
+    
+    private func addClouds() {
+        // 複数の雲を追加
+        for i in 0..<5 {
+            let cloudNode = createCloudNode()
+            cloudNode.position = SCNVector3(
+                Float.random(in: -10...10),
+                Float.random(in: 8...12),
+                Float.random(in: -15...(-10))
+            )
+            cloudNode.scale = SCNVector3(
+                Float.random(in: 0.8...1.5),
+                Float.random(in: 0.8...1.2),
+                Float.random(in: 0.8...1.5)
+            )
+            
+            // ゆっくり動く雲
+            let moveDistance = Float.random(in: 2...4)
+            let moveDuration = Double.random(in: 10...20)
+            let moveRight = SCNAction.moveBy(x: CGFloat(moveDistance), y: 0, z: 0, duration: moveDuration)
+            let moveLeft = SCNAction.moveBy(x: CGFloat(-moveDistance), y: 0, z: 0, duration: moveDuration)
+            let moveSequence = SCNAction.sequence([moveRight, moveLeft])
+            let moveForever = SCNAction.repeatForever(moveSequence)
+            
+            cloudNode.runAction(moveForever)
+            scene.rootNode.addChildNode(cloudNode)
+        }
+    }
+    
+    private func createCloudNode() -> SCNNode {
+        let cloudNode = SCNNode()
         
-        let eyeWhiteNode = SCNNode(geometry: eyeWhiteGeometry)
-        eyeWhiteNode.position = position
-        parent.addChildNode(eyeWhiteNode)
+        // 雲を複数の球体で構成
+        let cloudParts = [
+            (radius: 0.8, position: SCNVector3(0, 0, 0)),
+            (radius: 0.6, position: SCNVector3(-0.6, 0.1, 0)),
+            (radius: 0.7, position: SCNVector3(0.6, 0, 0)),
+            (radius: 0.5, position: SCNVector3(0, 0, -0.4)),
+            (radius: 0.6, position: SCNVector3(0.3, -0.1, 0.3))
+        ]
         
-        // 黒目
-        let pupilGeometry = SCNSphere(radius: size * 0.5)
-        let pupilMaterial = SCNMaterial()
-        pupilMaterial.diffuse.contents = UIColor.black
-        pupilGeometry.materials = [pupilMaterial]
+        let cloudMaterial = SCNMaterial()
+        cloudMaterial.diffuse.contents = UIColor(white: 1.0, alpha: 0.9)
+        cloudMaterial.transparency = 0.8
         
-        let pupilNode = SCNNode(geometry: pupilGeometry)
-        pupilNode.position = SCNVector3(0, 0, size * 0.3)
-        eyeWhiteNode.addChildNode(pupilNode)
+        for part in cloudParts {
+            let partGeometry = SCNSphere(radius: CGFloat(part.radius))
+            partGeometry.materials = [cloudMaterial]
+            
+            let partNode = SCNNode(geometry: partGeometry)
+            partNode.position = part.position
+            cloudNode.addChildNode(partNode)
+        }
         
-        // キラキラ（ハイライト）
-        let highlightGeometry = SCNSphere(radius: size * 0.2)
-        let highlightMaterial = SCNMaterial()
-        highlightMaterial.diffuse.contents = UIColor.white
-        highlightMaterial.emission.contents = UIColor.white
-        highlightGeometry.materials = [highlightMaterial]
-        
-        let highlightNode = SCNNode(geometry: highlightGeometry)
-        highlightNode.position = SCNVector3(size * 0.2, size * 0.2, size * 0.4)
-        eyeWhiteNode.addChildNode(highlightNode)
+        return cloudNode
     }
     
     private func createStarNode() -> SCNNode {
         let starPath = UIBezierPath()
-        let centerX: CGFloat = 0
-        let centerY: CGFloat = 0
-        let radius: CGFloat = 0.3
+        let numberOfPoints = 5
+        let radius: CGFloat = 0.5
+        let innerRadius: CGFloat = 0.2
         
-        for i in 0..<10 {
-            let angle = CGFloat(i) * CGFloat.pi / 5
-            let r = (i % 2 == 0) ? radius : radius * 0.5
-            let x = centerX + r * cos(angle - CGFloat.pi / 2)
-            let y = centerY + r * sin(angle - CGFloat.pi / 2)
+        for i in 0..<numberOfPoints * 2 {
+            let angle = (CGFloat(i) * CGFloat.pi) / CGFloat(numberOfPoints)
+            let r = (i % 2 == 0) ? radius : innerRadius
+            let x = r * cos(angle)
+            let y = r * sin(angle)
             
             if i == 0 {
                 starPath.move(to: CGPoint(x: x, y: y))
@@ -675,195 +867,117 @@ class SceneManager: ObservableObject {
         }
         starPath.close()
         
-        let starShape = SCNShape(path: starPath, extrusionDepth: 0.05)
+        let starShape = SCNShape(path: starPath, extrusionDepth: 0.1)
         let starMaterial = SCNMaterial()
         starMaterial.diffuse.contents = UIColor(red: 1.0, green: 0.9, blue: 0.3, alpha: 1.0)
-        starMaterial.emission.contents = UIColor(red: 1.0, green: 0.9, blue: 0.3, alpha: 0.3)
+        starMaterial.specular.contents = UIColor.white
+        starMaterial.shininess = 1.0
         starShape.materials = [starMaterial]
         
-        return SCNNode(geometry: starShape)
+        let starNode = SCNNode(geometry: starShape)
+        starNode.eulerAngles = SCNVector3(-Float.pi/2, 0, 0)
+        
+        // 星を回転させる
+        let rotate = SCNAction.rotateBy(x: 0, y: CGFloat.pi * 2, z: 0, duration: 10)
+        let repeatRotate = SCNAction.repeatForever(rotate)
+        starNode.runAction(repeatRotate)
+        
+        return starNode
     }
     
-    private func getAnimalColor(for animal: AnimalType) -> UIColor {
-        switch animal {
-        case .rabbit:
-            return UIColor(red: 1.0, green: 0.98, blue: 0.98, alpha: 1.0)
-        case .bear:
-            return UIColor(red: 0.65, green: 0.45, blue: 0.3, alpha: 1.0)
-        case .elephant:
-            return UIColor(red: 0.7, green: 0.7, blue: 0.75, alpha: 1.0)
-        case .giraffe:
-            return UIColor(red: 1.0, green: 0.9, blue: 0.5, alpha: 1.0)
-        case .lion:
-            return UIColor(red: 0.9, green: 0.7, blue: 0.4, alpha: 1.0)
-        case .panda:
-            return UIColor(red: 0.98, green: 0.98, blue: 0.98, alpha: 1.0)
-        }
-    }
-    
-    private func getAnimalAccentColor(for animal: AnimalType) -> UIColor {
-        switch animal {
-        case .rabbit:
-            return UIColor(red: 1.0, green: 0.8, blue: 0.85, alpha: 1.0)
-        case .bear:
-            return UIColor(red: 0.75, green: 0.55, blue: 0.4, alpha: 1.0)
-        case .elephant:
-            return UIColor(red: 0.75, green: 0.75, blue: 0.8, alpha: 1.0)
-        case .giraffe:
-            return UIColor(red: 0.6, green: 0.4, blue: 0.2, alpha: 1.0)
-        case .lion:
-            return UIColor(red: 0.7, green: 0.5, blue: 0.3, alpha: 1.0)
-        case .panda:
-            return UIColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 1.0)
-        }
-    }
-    
-    // アニメーション関連のメソッドは既存のものを使用
-    func rotateBoard(duration: TimeInterval = 3.0) {
+    // その他のメソッド（既存のコードから必要なものを継続）
+    func rotateBoard() {
         guard let boardNode = boardNode else { return }
         
-        let rotation = SCNAction.rotateBy(x: 0, y: CGFloat.pi * 2, z: 0, duration: duration)
-        rotation.timingMode = .easeInEaseOut
+        let rotation = SCNAction.rotateBy(x: 0, y: CGFloat.pi * 2, z: 0, duration: 3)
         boardNode.runAction(rotation)
-    }
-    
-    func animateAnimals() {
-        for (_, node) in animalNodes {
-            let jump = SCNAction.moveBy(x: 0, y: 0.3, z: 0, duration: 0.3)
-            jump.timingMode = .easeOut
-            let fall = SCNAction.moveBy(x: 0, y: -0.3, z: 0, duration: 0.3)
-            fall.timingMode = .easeIn
-            
-            let sequence = SCNAction.sequence([jump, fall])
-            node.runAction(sequence)
-        }
     }
     
     func highlightAnimal(_ animal: AnimalType) {
         guard let animalNode = animalNodes[animal] else { return }
         
         let scaleUp = SCNAction.scale(to: 1.2, duration: 0.2)
-        let wait = SCNAction.wait(duration: 0.5)
         let scaleDown = SCNAction.scale(to: 1.0, duration: 0.2)
+        let pulse = SCNAction.sequence([scaleUp, scaleDown])
         
-        let sequence = SCNAction.sequence([scaleUp, wait, scaleDown])
-        animalNode.runAction(sequence)
-        
-        // グロー効果を追加
-        if let firstGeometry = animalNode.childNodes.first?.geometry {
-            let originalMaterials = firstGeometry.materials
-            let glowMaterial = SCNMaterial()
-            glowMaterial.diffuse.contents = UIColor.yellow
-            glowMaterial.emission.contents = UIColor.yellow
-            
-            firstGeometry.materials = [glowMaterial]
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
-                firstGeometry.materials = originalMaterials
-            }
-        }
+        animalNode.runAction(pulse)
     }
     
+    func bounceAnimal(_ animal: AnimalType) {
+        guard let animalNode = animalNodes[animal] else { return }
+        
+        let moveUp = SCNAction.moveBy(x: 0, y: 0.5, z: 0, duration: 0.3)
+        moveUp.timingMode = .easeOut
+        let moveDown = SCNAction.moveBy(x: 0, y: -0.5, z: 0, duration: 0.3)
+        moveDown.timingMode = .easeIn
+        let bounce = SCNAction.sequence([moveUp, moveDown])
+        
+        animalNode.runAction(bounce)
+    }
+    
+    func handleTap(at location: CGPoint, in view: SCNView) -> AnimalType? {
+        let hitResults = view.hitTest(location, options: nil)
+        
+        for result in hitResults {
+            var currentNode: SCNNode? = result.node
+            
+            while let node = currentNode {
+                if let nodeName = node.name,
+                   let animal = AnimalType.allCases.first(where: { $0.rawValue == nodeName }) {
+                    return animal
+                }
+                currentNode = node.parent
+            }
+        }
+        
+        return nil
+    }
+    
+    func handleCardTap(at location: CGPoint, in view: SCNView) -> Int? {
+        let hitResults = view.hitTest(location, options: nil)
+        
+        for result in hitResults {
+            var currentNode: SCNNode? = result.node
+            
+            while let node = currentNode {
+                if let nodeName = node.name,
+                   nodeName.hasPrefix("card_"),
+                   let indexString = nodeName.split(separator: "_").last,
+                   let index = Int(indexString) {
+                    return index
+                }
+                currentNode = node.parent
+            }
+        }
+        
+        return nil
+    }
+    
+    func resetScene() {
+        // 既存のノードをクリア
+        animalNodes.values.forEach { $0.removeFromParentNode() }
+        animalNodes.removeAll()
+        cardNodes.forEach { $0.removeFromParentNode() }
+        cardNodes.removeAll()
+        
+        // 新しくセットアップ
+        setupAnimalsAndCards()
+    }
+    
+    // 不足している拡張メソッド
     func removeHighlight(_ animal: AnimalType) {
         guard let animalNode = animalNodes[animal] else { return }
         animalNode.removeAllActions()
-        animalNode.scale = SCNVector3(1, 1, 1)
+        animalNode.opacity = 1.0
     }
     
-    private func addClouds() {
-        // 雲を何個か追加
-        for i in 0..<5 {
-            let cloudNode = createCloudNode()
-            let x = Float.random(in: -10...10)
-            let y = Float.random(in: 8...12)
-            let z = Float.random(in: -15...(-8))
-            cloudNode.position = SCNVector3(x, y, z)
-            cloudNode.scale = SCNVector3(
-                Float.random(in: 0.8...1.5),
-                Float.random(in: 0.8...1.2),
-                Float.random(in: 0.8...1.3)
-            )
-            
-            // ゆっくり動くアニメーション
-            let moveDistance = Float.random(in: 15...25)
-            let moveDuration = TimeInterval.random(in: 20...40)
-            let moveRight = SCNAction.moveBy(x: CGFloat(moveDistance), y: 0, z: 0, duration: moveDuration)
-            let moveLeft = SCNAction.moveBy(x: CGFloat(-moveDistance), y: 0, z: 0, duration: moveDuration)
-            let sequence = SCNAction.sequence([moveRight, moveLeft])
-            let forever = SCNAction.repeatForever(sequence)
-            cloudNode.runAction(forever)
-            
-            scene.rootNode.addChildNode(cloudNode)
+    func animateAnimals() {
+        for animalNode in animalNodes.values {
+            let bounce = SCNAction.moveBy(x: 0, y: 0.2, z: 0, duration: 0.3)
+            bounce.timingMode = .easeInEaseOut
+            let bounceBack = bounce.reversed()
+            let sequence = SCNAction.sequence([bounce, bounceBack])
+            animalNode.runAction(sequence)
         }
-        
-        // 装飾的な星を追加
-        for _ in 0..<8 {
-            let starNode = createFloatingStarNode()
-            let x = Float.random(in: -8...8)
-            let y = Float.random(in: 3...10)
-            let z = Float.random(in: -10...(-5))
-            starNode.position = SCNVector3(x, y, z)
-            
-            // キラキラアニメーション
-            let rotateAction = SCNAction.rotateBy(x: 0, y: CGFloat.pi * 2, z: 0, duration: TimeInterval.random(in: 3...6))
-            let scaleUp = SCNAction.scale(to: 1.2, duration: 1.5)
-            let scaleDown = SCNAction.scale(to: 0.8, duration: 1.5)
-            let scaleSequence = SCNAction.sequence([scaleUp, scaleDown])
-            let group = SCNAction.group([
-                SCNAction.repeatForever(rotateAction),
-                SCNAction.repeatForever(scaleSequence)
-            ])
-            starNode.runAction(group)
-            
-            scene.rootNode.addChildNode(starNode)
-        }
-    }
-    
-    private func createCloudNode() -> SCNNode {
-        let cloudNode = SCNNode()
-        
-        // 雲を複数の球体で構成
-        let cloudParts = Int.random(in: 4...6)
-        for i in 0..<cloudParts {
-            let sphereRadius = CGFloat.random(in: 0.8...1.5)
-            let sphereGeometry = SCNSphere(radius: sphereRadius)
-            
-            let cloudMaterial = SCNMaterial()
-            cloudMaterial.diffuse.contents = UIColor(white: 1.0, alpha: 0.9)
-            cloudMaterial.transparency = 0.7
-            cloudMaterial.isDoubleSided = true
-            sphereGeometry.materials = [cloudMaterial]
-            
-            let sphereNode = SCNNode(geometry: sphereGeometry)
-            let x = Float(i) * 0.8 - Float(cloudParts) * 0.4
-            let y = Float.random(in: -0.3...0.3)
-            sphereNode.position = SCNVector3(x, y, 0)
-            sphereNode.scale = SCNVector3(1.2, 0.8, 1.0)
-            
-            cloudNode.addChildNode(sphereNode)
-        }
-        
-        return cloudNode
-    }
-    
-    private func createFloatingStarNode() -> SCNNode {
-        let starGeometry = SCNSphere(radius: 0.1)
-        let starMaterial = SCNMaterial()
-        starMaterial.diffuse.contents = UIColor(red: 1.0, green: 1.0, blue: 0.3, alpha: 1.0)
-        starMaterial.emission.contents = UIColor(red: 1.0, green: 1.0, blue: 0.3, alpha: 0.5)
-        starGeometry.materials = [starMaterial]
-        
-        let starNode = SCNNode(geometry: starGeometry)
-        
-        // 星の形の装飾を追加
-        for i in 0..<4 {
-            let rayGeometry = SCNCapsule(capRadius: 0.02, height: 0.3)
-            rayGeometry.materials = [starMaterial]
-            let rayNode = SCNNode(geometry: rayGeometry)
-            rayNode.eulerAngles = SCNVector3(0, 0, Float(i) * Float.pi / 2)
-            starNode.addChildNode(rayNode)
-        }
-        
-        return starNode
     }
 }

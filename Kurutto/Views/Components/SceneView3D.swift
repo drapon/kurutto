@@ -15,7 +15,7 @@ struct SceneView3D: UIViewRepresentable {
         scnView.scene = scene
         scnView.backgroundColor = UIColor.clear
         scnView.autoenablesDefaultLighting = false
-        scnView.allowsCameraControl = true
+        scnView.allowsCameraControl = false  // スワイプジェスチャーと競合を避けるため無効化
         scnView.showsStatistics = false
         
         // カメラコントロールの設定
@@ -28,10 +28,6 @@ struct SceneView3D: UIViewRepresentable {
         let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:)))
         scnView.addGestureRecognizer(tapGesture)
         
-        // パンジェスチャーを追加（手動回転用）
-        let panGesture = UIPanGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handlePan(_:)))
-        scnView.addGestureRecognizer(panGesture)
-        
         return scnView
     }
     
@@ -41,7 +37,6 @@ struct SceneView3D: UIViewRepresentable {
     
     class Coordinator: NSObject {
         var parent: SceneView3D
-        private var lastPanLocation: CGPoint = .zero
         
         init(_ parent: SceneView3D) {
             self.parent = parent
@@ -56,48 +51,29 @@ struct SceneView3D: UIViewRepresentable {
             if let firstHit = hitResults.first {
                 var node: SCNNode? = firstHit.node
                 
-                // 親ノードを探して動物名を取得
+                // 親ノードを探してノード名を取得
                 while node != nil {
-                    if let nodeName = node?.name,
-                       AnimalType.allCases.contains(where: { $0.rawValue == nodeName }) {
-                        parent.selectedNode = nodeName
-                        parent.onNodeTapped?(nodeName)
-                        
-                        // タップフィードバック
-                        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
-                        feedbackGenerator.impactOccurred()
-                        
-                        // タップアニメーション
-                        animateNodeTap(node!)
-                        break
+                    if let nodeName = node?.name {
+                        // 動物名かカード名かをチェック
+                        if AnimalType.allCases.contains(where: { $0.rawValue == nodeName }) ||
+                           nodeName.hasPrefix("card_") {
+                            parent.selectedNode = nodeName
+                            parent.onNodeTapped?(nodeName)
+                            
+                            // タップフィードバック
+                            let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+                            feedbackGenerator.impactOccurred()
+                            
+                            // タップアニメーション
+                            animateNodeTap(node!)
+                            break
+                        }
                     }
                     node = node?.parent
                 }
             }
         }
         
-        @objc func handlePan(_ gestureRecognizer: UIPanGestureRecognizer) {
-            guard let scnView = gestureRecognizer.view as? SCNView else { return }
-            
-            let location = gestureRecognizer.location(in: scnView)
-            
-            switch gestureRecognizer.state {
-            case .began:
-                lastPanLocation = location
-            case .changed:
-                let deltaX = Float(location.x - lastPanLocation.x)
-                let deltaY = Float(location.y - lastPanLocation.y)
-                
-                // ボードを回転
-                if let boardNode = scnView.scene?.rootNode.childNode(withName: "board", recursively: true) {
-                    boardNode.eulerAngles.y += deltaX * 0.01
-                }
-                
-                lastPanLocation = location
-            default:
-                break
-            }
-        }
         
         private func animateNodeTap(_ node: SCNNode) {
             let scaleAction = SCNAction.sequence([
@@ -127,4 +103,5 @@ struct SceneViewModifier: ViewModifier {
             }
     }
 }
+
 

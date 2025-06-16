@@ -3,160 +3,106 @@ import SwiftUI
 struct MenuView: View {
     @EnvironmentObject var appState: AppState
     @State private var animateTitle = false
-    @State private var animateButtons = false
-    @State private var rotationAngle: Double = 0
+    @State private var showingAbout = false
     
     var body: some View {
-        VStack(spacing: 30) {
-            Spacer()
-            
-            titleSection
+        VStack(spacing: 0) {
+            headerSection
             
             Spacer()
             
-            animalCircle
+            menuButtons
             
             Spacer()
             
-            buttonSection
-            
-            Spacer()
+            footerSection
         }
-        .padding(.horizontal, 40)
+        .padding()
         .onAppear {
-            startAnimations()
-            AudioManager.shared.playBackgroundMusic(.menu)
+            withAnimation(.easeInOut(duration: 1.5)) {
+                animateTitle = true
+            }
         }
     }
     
-    private var titleSection: some View {
-        VStack(spacing: 10) {
+    private var headerSection: some View {
+        VStack(spacing: 20) {
+            HStack {
+                Spacer()
+                
+                Button(action: {
+                    showingAbout = true
+                }) {
+                    Image(systemName: "info.circle")
+                        .font(.system(size: 24))
+                        .foregroundColor(Color("PrimaryColor"))
+                }
+                .sheet(isPresented: $showingAbout) {
+                    SettingsView()
+                }
+            }
+            
             Text("くるっと")
                 .font(.system(size: 72, weight: .bold, design: .rounded))
                 .foregroundColor(Color("PrimaryColor"))
                 .scaleEffect(animateTitle ? 1.0 : 0.8)
-                .opacity(animateTitle ? 1.0 : 0.0)
+                .opacity(animateTitle ? 1.0 : 0.6)
+                .animation(.spring(response: 0.8, dampingFraction: 0.6), value: animateTitle)
+                .shadow(color: Color("PrimaryColor").opacity(0.3), radius: 10, x: 0, y: 5)
             
-            Text("どうぶつたちと いっしょに\nくうかんにんしきを まなぼう！")
+            Text("楽しく学ぼう 空間認識！")
                 .font(.system(size: 24, weight: .medium, design: .rounded))
                 .foregroundColor(Color("SecondaryTextColor"))
                 .multilineTextAlignment(.center)
-                .opacity(animateTitle ? 1.0 : 0.0)
         }
+        .padding(.top, 20)
     }
     
-    private var animalCircle: some View {
-        ZStack {
-            ForEach(0..<6) { index in
-                animalIconAt(index: index)
-            }
-        }
-        .frame(width: 300, height: 300)
-        .onAppear {
-            withAnimation(.linear(duration: 20).repeatForever(autoreverses: false)) {
-                rotationAngle = .pi * 2
-            }
-        }
-    }
-    
-    private func animalIconAt(index: Int) -> some View {
-        let angle = CGFloat(index) * .pi / 3 + rotationAngle
-        let xOffset = 120 * cos(angle)
-        let yOffset = 120 * sin(angle)
-        
-        return AnimalIcon(animalType: AnimalType.allCases[index])
-            .frame(width: 80, height: 80)
-            .offset(x: xOffset, y: yOffset)
-    }
-    
-    private var buttonSection: some View {
+    private var menuButtons: some View {
         VStack(spacing: 20) {
-            PrimaryButton(title: "あそぶ", icon: "play.fill") {
-                withAnimation {
-                    appState.currentScreen = .game
-                }
+            PrimaryButton(
+                title: "あそぶ",
+                icon: "play.fill"
+            ) {
+                appState.currentScreen = .game
             }
-            .scaleEffect(animateButtons ? 1.0 : 0.8)
-            .opacity(animateButtons ? 1.0 : 0.0)
             
-            HStack(spacing: 15) {
-                SecondaryButton(title: "れんしゅう", icon: "graduationcap.fill") {
-                    withAnimation {
-                        appState.currentScreen = .tutorial
-                    }
+            HStack(spacing: 20) {
+                SecondaryButton(
+                    title: "設定",
+                    icon: "gearshape.fill"
+                ) {
+                    appState.currentScreen = .settings
                 }
                 
-                SecondaryButton(title: "せってい", icon: "gearshape.fill") {
-                    withAnimation {
-                        appState.currentScreen = .settings
-                    }
+                SecondaryButton(
+                    title: "成績",
+                    icon: "chart.bar.fill"
+                ) {
+                    appState.currentScreen = .results
                 }
                 
-                SecondaryButton(title: "きろく", icon: "chart.bar.fill") {
-                    withAnimation {
-                        appState.currentScreen = .results
-                    }
+                SecondaryButton(
+                    title: "ヘルプ",
+                    icon: "questionmark.circle.fill"
+                ) {
+                    appState.currentScreen = .tutorial
                 }
             }
-            .scaleEffect(animateButtons ? 1.0 : 0.8)
-            .opacity(animateButtons ? 1.0 : 0.0)
         }
     }
     
-    private func startAnimations() {
-        withAnimation(.easeOut(duration: 0.6)) {
-            animateTitle = true
+    private var footerSection: some View {
+        VStack(spacing: 10) {
+            Text("推奨年齢: 3歳〜5歳")
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(Color("SecondaryTextColor"))
+            
+            Text("Version 1.0")
+                .font(.system(size: 14))
+                .foregroundColor(Color("SecondaryTextColor").opacity(0.7))
         }
-        
-        withAnimation(.easeOut(duration: 0.6).delay(0.3)) {
-            animateButtons = true
-        }
-    }
-}
-
-enum AnimalType: String, CaseIterable {
-    case rabbit = "うさぎ"
-    case bear = "くま"
-    case elephant = "ぞう"
-    case giraffe = "きりん"
-    case lion = "らいおん"
-    case panda = "ぱんだ"
-    
-    var displayName: String {
-        return self.rawValue
-    }
-    
-    var imageName: String {
-        switch self {
-        case .rabbit: return "hare.fill"
-        case .bear: return "pawprint.fill"
-        case .elephant: return "tortoise.fill"  // Placeholder for elephant
-        case .giraffe: return "bird.fill"       // Placeholder for giraffe
-        case .lion: return "cat.fill"          // Placeholder for lion
-        case .panda: return "leaf.fill"        // Placeholder for panda
-        }
-    }
-}
-
-struct AnimalIcon: View {
-    let animalType: AnimalType
-    @State private var bounce = false
-    
-    var body: some View {
-        Circle()
-            .fill(Color.white)
-            .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 3)
-            .overlay(
-                Image(systemName: animalType.imageName)
-                    .font(.system(size: 40))
-                    .foregroundColor(Color("AccentColor"))
-            )
-            .scaleEffect(bounce ? 1.1 : 1.0)
-            .onAppear {
-                withAnimation(.easeInOut(duration: 2).repeatForever()) {
-                    bounce = true
-                }
-            }
+        .padding(.bottom, 20)
     }
 }
 
@@ -164,6 +110,7 @@ struct PrimaryButton: View {
     let title: String
     let icon: String
     let action: () -> Void
+    @State private var isPressed = false
     
     var body: some View {
         Button(action: action) {
@@ -179,7 +126,11 @@ struct PrimaryButton: View {
             .cornerRadius(20)
             .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
         }
-        .buttonStyle(BounceButtonStyle())
+        .scaleEffect(isPressed ? 0.95 : 1.0)
+        .animation(.easeInOut(duration: 0.1), value: isPressed)
+        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
+            isPressed = pressing
+        }, perform: {})
     }
 }
 
@@ -187,6 +138,7 @@ struct SecondaryButton: View {
     let title: String
     let icon: String
     let action: () -> Void
+    @State private var isPressed = false
     
     var body: some View {
         Button(action: action) {
@@ -205,15 +157,11 @@ struct SecondaryButton: View {
                     .stroke(Color("SecondaryButtonBorderColor"), lineWidth: 3)
             )
         }
-        .buttonStyle(BounceButtonStyle())
-    }
-}
-
-struct BounceButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
-            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+        .scaleEffect(isPressed ? 0.95 : 1.0)
+        .animation(.easeInOut(duration: 0.1), value: isPressed)
+        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
+            isPressed = pressing
+        }, perform: {})
     }
 }
 

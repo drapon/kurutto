@@ -6,6 +6,8 @@ struct GameView: View {
     @StateObject private var gameViewModel = GameViewModel()
     @State private var showingResult = false
     @State private var animatingHint = false
+    @State private var dragOffset: CGSize = .zero
+    @State private var isDragging = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -20,7 +22,7 @@ struct GameView: View {
             
             Spacer()
             
-            answerSection
+            controlSection
             
             Spacer()
         }
@@ -75,7 +77,7 @@ struct GameView: View {
     private var questionSection: some View {
         VStack(spacing: 15) {
             Text(gameViewModel.currentQuestion?.questionText ?? "")
-                .font(.system(size: 32, weight: .bold, design: .rounded))
+                .font(.system(size: 28, weight: .bold, design: .rounded))
                 .foregroundColor(Color("PrimaryTextColor"))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 20)
@@ -94,7 +96,8 @@ struct GameView: View {
                 }
                 .bounceEffect(isPressed: false)
                 
-                if gameViewModel.highlightedAnswers.count >= 2 {
+                if gameViewModel.highlightedCards.count >= 2 && 
+                   gameViewModel.currentQuestion?.spatialRelation != .gridPosition {
                     Button(action: {
                         gameViewModel.showHint()
                         animatingHint = true
@@ -128,39 +131,116 @@ struct GameView: View {
             scene: gameViewModel.gameScene,
             selectedNode: .constant(nil),
             onNodeTapped: { nodeName in
-                // 3Dシーン内の動物がタップされた時の処理
-                if let animal = AnimalType.allCases.first(where: { $0.rawValue == nodeName }) {
-                    handleAnswer(animal)
+                // カードがタップされた時の処理
+                if nodeName.hasPrefix("card_"),
+                   let indexString = nodeName.split(separator: "_").last,
+                   let index = Int(indexString) {
+                    handleCardTap(index)
                 }
             }
         )
         .frame(height: 350)
         .modifier(SceneViewModifier(cornerRadius: 20, shadow: true))
         .padding(.horizontal, 20)
+        .gesture(
+            DragGesture()
+                .onChanged { value in
+                    if !isDragging {
+                        isDragging = true
+                        dragOffset = value.translation
+                    }
+                }
+                .onEnded { value in
+                    isDragging = false
+                    handleSwipe(value.translation)
+                    dragOffset = .zero
+                }
+        )
+        .overlay(
+            swipeIndicator
+                .opacity(gameViewModel.currentAnimalView == nil ? 0.7 : 0)
+        )
     }
     
-    private var answerSection: some View {
+    private var swipeIndicator: some View {
+        VStack {
+            Spacer()
+            HStack {
+                Image(systemName: "hand.draw")
+                    .font(.system(size: 20))
+                    .foregroundColor(.white)
+                Text("スワイプして動物の視点に切り替え")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.white)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(Color.black.opacity(0.5))
+            .cornerRadius(20)
+            .padding(.bottom, 10)
+        }
+    }
+    
+    private var controlSection: some View {
         VStack(spacing: 15) {
-            if let options = gameViewModel.currentQuestion?.options {
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 15) {
-                    ForEach(options, id: \.self) { animal in
-                        AnswerButton(
-                            animal: animal,
-                            isHighlighted: gameViewModel.highlightedAnswers.contains(animal)
+            if let question = gameViewModel.currentQuestion {
+                // カードの選択肢を表示
+                HStack(spacing: 10) {
+                    ForEach(question.options, id: \.self) { cardIndex in
+                        CardOptionButton(
+                            cardIndex: cardIndex,
+                            isHighlighted: gameViewModel.highlightedCards.contains(cardIndex),
+                            gridSize: question.gridSize
                         ) {
-                            handleAnswer(animal)
+                            handleCardTap(cardIndex)
                         }
                     }
                 }
+                .padding(.horizontal, 20)
+            }
+            
+            // 視点リセットボタン
+            if gameViewModel.currentAnimalView != nil {
+                Button(action: {
+                    gameViewModel.resetToDefaultView()
+                }) {
+                    Label("通常視点に戻る", systemImage: "arrow.uturn.left")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+                        .background(Color("PrimaryColor"))
+                        .cornerRadius(25)
+                }
+                .transition(.scale.combined(with: .opacity))
             }
         }
-        .padding(.horizontal, 20)
         .padding(.bottom, 20)
     }
     
-    private func handleAnswer(_ answer: AnimalType) {
+    private func handleCardTap(_ cardIndex: Int) {
         HapticManager.light()
-        gameViewModel.checkAnswer(answer)
+        gameViewModel.checkCardAnswer(cardIndex)
+    }
+    
+    private func handleSwipe(_ translation: CGSize) {
+        let threshold: CGFloat = 50
+        
+        if abs(translation.width) > abs(translation.height) {
+            // 横スワイプ
+            if translation.width > threshold {
+                gameViewModel.handleSwipe(direction: .right)
+            } else if translation.width < -threshold {
+                gameViewModel.handleSwipe(direction: .left)
+            }
+        } else {
+            // 縦スワイプ
+            if translation.height > threshold {
+                gameViewModel.handleSwipe(direction: .down)
+            } else if translation.height < -threshold {
+                gameViewModel.handleSwipe(direction: .up)
+            }
+        }
     }
     
     @ViewBuilder
@@ -173,37 +253,46 @@ struct GameView: View {
     }
 }
 
-struct AnswerButton: View {
-    let animal: AnimalType
+struct CardOptionButton: View {
+    let cardIndex: Int
     let isHighlighted: Bool
+    let gridSize: Int
     let action: () -> Void
+    @State private var isPressed = false
     
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 10) {
-                Image(systemName: animal.imageName)
-                    .font(.system(size: 40))
+            VStack(spacing: 5) {
+                // カードの位置を表示（例：2行3列）
+                let row = cardIndex / gridSize + 1
+                let col = cardIndex % gridSize + 1
+                
+                Text("\(row)-\(col)")
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
                     .foregroundColor(isHighlighted ? Color("HighlightColor") : Color("PrimaryColor"))
                 
-                Text(animal.rawValue)
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
-                    .foregroundColor(Color("PrimaryTextColor"))
+                Image(systemName: "square.fill")
+                    .font(.system(size: 30))
+                    .foregroundColor(isHighlighted ? Color("HighlightColor") : Color("PrimaryColor").opacity(0.3))
             }
-            .frame(maxWidth: .infinity)
-            .frame(height: 100)
+            .frame(width: 70, height: 70)
             .background(
-                RoundedRectangle(cornerRadius: 20)
+                RoundedRectangle(cornerRadius: 15)
                     .fill(Color.white)
                     .shadow(color: isHighlighted ? Color("HighlightColor").opacity(0.5) : .gray.opacity(0.3), 
                            radius: isHighlighted ? 8 : 4,
                            x: 0, y: 3)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 20)
+                RoundedRectangle(cornerRadius: 15)
                     .stroke(isHighlighted ? Color("HighlightColor") : Color.clear, lineWidth: 3)
             )
         }
-        .buttonStyle(BounceButtonStyle())
+        .scaleEffect(isPressed ? 0.9 : 1.0)
+        .animation(.spring(response: 0.2, dampingFraction: 0.5), value: isPressed)
+        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
+            isPressed = pressing
+        }, perform: {})
     }
 }
 

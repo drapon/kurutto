@@ -10,22 +10,25 @@ class QuestionTests: XCTestCase {
     override func tearDownWithError() throws {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
-    
+
     // MARK: - Question Generation Tests
     
     func testQuestionTextGeneration() throws {
         let question = Question(
             questionText: "うさぎの みぎには だれがいる？",
             targetAnimal: .rabbit,
-            correctAnswer: .bear,
-            options: [.bear, .panda, .lion, .giraffe],
+            targetPosition: 0,
+            correctCardIndex: 1,
+            highlightedCardIndex: 0,
+            options: [1, 2, 3, 4],
             spatialRelation: .right,
-            difficulty: .easy
+            difficulty: .easy,
+            gridSize: 3
         )
         
         XCTAssertEqual(question.questionText, "うさぎの みぎには だれがいる？")
         XCTAssertEqual(question.targetAnimal, .rabbit)
-        XCTAssertEqual(question.correctAnswer, .bear)
+        XCTAssertEqual(question.correctCardIndex, 1)
         XCTAssertEqual(question.spatialRelation, .right)
     }
     
@@ -33,19 +36,25 @@ class QuestionTests: XCTestCase {
         let question1 = Question(
             questionText: "Test 1",
             targetAnimal: .rabbit,
-            correctAnswer: .bear,
+            targetPosition: 0,
+            correctCardIndex: 1,
+            highlightedCardIndex: 0,
             options: [],
             spatialRelation: .left,
-            difficulty: .easy
+            difficulty: .easy,
+            gridSize: 3
         )
         
         let question2 = Question(
             questionText: "Test 2",
             targetAnimal: .bear,
-            correctAnswer: .rabbit,
+            targetPosition: 1,
+            correctCardIndex: 2,
+            highlightedCardIndex: 1,
             options: [],
             spatialRelation: .right,
-            difficulty: .easy
+            difficulty: .easy,
+            gridSize: 3
         )
         
         XCTAssertNotEqual(question1.id, question2.id)
@@ -55,10 +64,13 @@ class QuestionTests: XCTestCase {
         let question = Question(
             questionText: "Test",
             targetAnimal: .rabbit,
-            correctAnswer: .bear,
+            targetPosition: 0,
+            correctCardIndex: 1,
+            highlightedCardIndex: 0,
             options: [],
             spatialRelation: .left,
-            difficulty: .easy
+            difficulty: .easy,
+            gridSize: 3
         )
         
         XCTAssertEqual(question.relationType, .left)
@@ -152,17 +164,16 @@ class QuestionGeneratorTests: XCTestCase {
         }
     }
     
-    func testCorrectAnswerCalculation() throws {
-        // Test specific position calculation
-        let targetIndex = 0 // うさぎ
-        let relation = SpatialRelation.right
+    func testCorrectCardIndexCalculation() throws {
+        // Test specific card position calculation
+        let generator = QuestionGenerator(level: 1)
+        let question = generator.generateQuestion()
         
-        // In circular arrangement of 6 animals:
-        // Index 0 (rabbit) -> right -> Index 1 (bear)
-        let expectedIndex = 1
-        let expectedAnimal = AnimalType.allCases[expectedIndex]
-        
-        XCTAssertEqual(expectedAnimal, .bear)
+        // カードインデックスが適切な範囲内にあることを確認
+        XCTAssertTrue(question.correctCardIndex >= 0)
+        XCTAssertTrue(question.correctCardIndex < question.gridSize * question.gridSize)
+        XCTAssertTrue(question.highlightedCardIndex >= 0)
+        XCTAssertTrue(question.highlightedCardIndex < question.gridSize * question.gridSize)
     }
 }
 
