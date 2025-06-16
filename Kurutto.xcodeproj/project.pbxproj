@@ -1,0 +1,508 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 70;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		18ECB76A7576E64D26B9DCE5 /* SpeechManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84573F427A1647DCDA4E3A53 /* SpeechManager.swift */; };
+		27A81171B33C997F8D09B28A /* AnimationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BAAF9F16A670F0198C3CE6E /* AnimationManager.swift */; };
+		6415CCE5EDF9F897961C939C /* TutorialView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9484CD08FF755900C553C44 /* TutorialView.swift */; };
+		A1234567890ABCDEF1234567 /* Question.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D65C51BFCFF91B50EE31B4 /* Question.swift */; };
+		A1234567890ABCDEF1234568 /* SceneManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E5A6C756EFB7756EDF84794 /* SceneManager.swift */; };
+		A1234567890ABCDEF1234569 /* Components/SceneView3D.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C2ECFE1A9C3673C965F01D2 /* Components/SceneView3D.swift */; };
+		B1234567890ABCDEF1234567 /* MemoryManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1234567890ABCDEF1234567 /* MemoryManager.swift */; };
+		B1234567890ABCDEF1234568 /* PerformanceMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1234567890ABCDEF1234568 /* PerformanceMonitor.swift */; };
+		B1234567890ABCDEF1234569 /* AccessibilityExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1234567890ABCDEF1234569 /* AccessibilityExtensions.swift */; };
+		B1234567890ABCDEF123456A /* ErrorHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1234567890ABCDEF123456A /* ErrorHandler.swift */; };
+		B1234567890ABCDEF123456B /* OptimizationHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1234567890ABCDEF123456B /* OptimizationHelpers.swift */; };
+		B41234562B5A123400123456 /* KuruttoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B41234552B5A123400123456 /* KuruttoApp.swift */; };
+		B41234582B5A123400123456 /* MenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B41234572B5A123400123456 /* MenuView.swift */; };
+		B412345A2B5A123500123456 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B41234592B5A123500123456 /* Assets.xcassets */; };
+		B412345D2B5A123500123456 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B412345C2B5A123500123456 /* Preview Assets.xcassets */; };
+		B41234642B5A124500123456 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B41234632B5A124500123456 /* GameView.swift */; };
+		B41234662B5A124500123456 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B41234652B5A124500123456 /* SettingsView.swift */; };
+		B41234682B5A124500123456 /* ResultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B41234672B5A124500123456 /* ResultsView.swift */; };
+		B412346A2B5A124500123456 /* GameViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B41234692B5A124500123456 /* GameViewModel.swift */; };
+		B412346C2B5A124500123456 /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B412346B2B5A124500123456 /* AudioManager.swift */; };
+		B412346E2B5A124500123456 /* CoreDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B412346D2B5A124500123456 /* CoreDataManager.swift */; };
+		B41234712B5A125500123456 /* Kurutto.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = B412346F2B5A125500123456 /* Kurutto.xcdatamodeld */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		4E5A6C756EFB7756EDF84794 /* SceneManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SceneManager.swift; sourceTree = "<group>"; };
+		6BAAF9F16A670F0198C3CE6E /* AnimationManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AnimationManager.swift; sourceTree = "<group>"; };
+		7C2ECFE1A9C3673C965F01D2 /* Components/SceneView3D.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Components/SceneView3D.swift; sourceTree = "<group>"; };
+		84573F427A1647DCDA4E3A53 /* SpeechManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpeechManager.swift; sourceTree = "<group>"; };
+		87D65C51BFCFF91B50EE31B4 /* Question.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Question.swift; sourceTree = "<group>"; };
+		B41234522B5A123400123456 /* Kurutto.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Kurutto.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B41234552B5A123400123456 /* KuruttoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KuruttoApp.swift; sourceTree = "<group>"; };
+		B41234572B5A123400123456 /* MenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuView.swift; sourceTree = "<group>"; };
+		B41234592B5A123500123456 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B412345C2B5A123500123456 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		B41234632B5A124500123456 /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
+		B41234652B5A124500123456 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		B41234672B5A124500123456 /* ResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsView.swift; sourceTree = "<group>"; };
+		B41234692B5A124500123456 /* GameViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewModel.swift; sourceTree = "<group>"; };
+		B412346B2B5A124500123456 /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
+		B412346D2B5A124500123456 /* CoreDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataManager.swift; sourceTree = "<group>"; };
+		B41234702B5A125500123456 /* Kurutto.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Kurutto.xcdatamodel; sourceTree = "<group>"; };
+		B41234722B5A126600123456 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C1234567890ABCDEF1234567 /* MemoryManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryManager.swift; sourceTree = "<group>"; };
+		C1234567890ABCDEF1234568 /* PerformanceMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceMonitor.swift; sourceTree = "<group>"; };
+		C1234567890ABCDEF1234569 /* AccessibilityExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityExtensions.swift; sourceTree = "<group>"; };
+		C1234567890ABCDEF123456A /* ErrorHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandler.swift; sourceTree = "<group>"; };
+		C1234567890ABCDEF123456B /* OptimizationHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptimizationHelpers.swift; sourceTree = "<group>"; };
+		F9484CD08FF755900C553C44 /* TutorialView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TutorialView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		4A418B732DFFD1E7000F1537 /* Sounds */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); name = Sounds; path = Kurutto/Resources/Sounds; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		B412344F2B5A123400123456 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		9088093345272814A70C3E09 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				7C2ECFE1A9C3673C965F01D2 /* Components/SceneView3D.swift */,
+			);
+			name = Components;
+			sourceTree = "<group>";
+		};
+		B41234492B5A123400123456 = {
+			isa = PBXGroup;
+			children = (
+				4A418B732DFFD1E7000F1537 /* Sounds */,
+				B41234542B5A123400123456 /* Kurutto */,
+				B41234532B5A123400123456 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		B41234532B5A123400123456 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B41234522B5A123400123456 /* Kurutto.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B41234542B5A123400123456 /* Kurutto */ = {
+			isa = PBXGroup;
+			children = (
+				B41234722B5A126600123456 /* Info.plist */,
+				B41234552B5A123400123456 /* KuruttoApp.swift */,
+				B41234722B5A126500123456 /* Views */,
+				B41234732B5A126500123456 /* ViewModels */,
+				B41234742B5A126500123456 /* Models */,
+				B41234752B5A126500123456 /* Services */,
+				D1234567890ABCDEF1234567 /* Extensions */,
+				D1234567890ABCDEF1234568 /* Utilities */,
+				B41234592B5A123500123456 /* Assets.xcassets */,
+				B412345B2B5A123500123456 /* Preview Content */,
+			);
+			path = Kurutto;
+			sourceTree = "<group>";
+		};
+		B412345B2B5A123500123456 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				B412345C2B5A123500123456 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		B41234722B5A126500123456 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				B41234572B5A123400123456 /* MenuView.swift */,
+				B41234632B5A124500123456 /* GameView.swift */,
+				B41234652B5A124500123456 /* SettingsView.swift */,
+				B41234672B5A124500123456 /* ResultsView.swift */,
+				F9484CD08FF755900C553C44 /* TutorialView.swift */,
+				9088093345272814A70C3E09 /* Components */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		B41234732B5A126500123456 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				B41234692B5A124500123456 /* GameViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		B41234742B5A126500123456 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				B412346F2B5A125500123456 /* Kurutto.xcdatamodeld */,
+				87D65C51BFCFF91B50EE31B4 /* Question.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		B41234752B5A126500123456 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				B412346B2B5A124500123456 /* AudioManager.swift */,
+				B412346D2B5A124500123456 /* CoreDataManager.swift */,
+				84573F427A1647DCDA4E3A53 /* SpeechManager.swift */,
+				6BAAF9F16A670F0198C3CE6E /* AnimationManager.swift */,
+				4E5A6C756EFB7756EDF84794 /* SceneManager.swift */,
+				C1234567890ABCDEF1234567 /* MemoryManager.swift */,
+				C1234567890ABCDEF1234568 /* PerformanceMonitor.swift */,
+				C1234567890ABCDEF123456A /* ErrorHandler.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		D1234567890ABCDEF1234567 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				C1234567890ABCDEF1234569 /* AccessibilityExtensions.swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
+		D1234567890ABCDEF1234568 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				C1234567890ABCDEF123456B /* OptimizationHelpers.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		B41234512B5A123400123456 /* Kurutto */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B41234602B5A123500123456 /* Build configuration list for PBXNativeTarget "Kurutto" */;
+			buildPhases = (
+				B412344E2B5A123400123456 /* Sources */,
+				B412344F2B5A123400123456 /* Frameworks */,
+				B41234502B5A123400123456 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				4A418B732DFFD1E7000F1537 /* Sounds */,
+			);
+			name = Kurutto;
+			productName = Kurutto;
+			productReference = B41234522B5A123400123456 /* Kurutto.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B412344A2B5A123400123456 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					B41234512B5A123400123456 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = B412344D2B5A123400123456 /* Build configuration list for PBXProject "Kurutto" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = B41234492B5A123400123456;
+			productRefGroup = B41234532B5A123400123456 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B41234512B5A123400123456 /* Kurutto */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		B41234502B5A123400123456 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B412345D2B5A123500123456 /* Preview Assets.xcassets in Resources */,
+				B412345A2B5A123500123456 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		B412344E2B5A123400123456 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B41234582B5A123400123456 /* MenuView.swift in Sources */,
+				B41234562B5A123400123456 /* KuruttoApp.swift in Sources */,
+				B41234642B5A124500123456 /* GameView.swift in Sources */,
+				B41234662B5A124500123456 /* SettingsView.swift in Sources */,
+				B41234682B5A124500123456 /* ResultsView.swift in Sources */,
+				B412346A2B5A124500123456 /* GameViewModel.swift in Sources */,
+				B412346C2B5A124500123456 /* AudioManager.swift in Sources */,
+				B412346E2B5A124500123456 /* CoreDataManager.swift in Sources */,
+				B41234712B5A125500123456 /* Kurutto.xcdatamodeld in Sources */,
+				18ECB76A7576E64D26B9DCE5 /* SpeechManager.swift in Sources */,
+				27A81171B33C997F8D09B28A /* AnimationManager.swift in Sources */,
+				6415CCE5EDF9F897961C939C /* TutorialView.swift in Sources */,
+				A1234567890ABCDEF1234567 /* Question.swift in Sources */,
+				A1234567890ABCDEF1234568 /* SceneManager.swift in Sources */,
+				A1234567890ABCDEF1234569 /* Components/SceneView3D.swift in Sources */,
+				B1234567890ABCDEF1234567 /* MemoryManager.swift in Sources */,
+				B1234567890ABCDEF1234568 /* PerformanceMonitor.swift in Sources */,
+				B1234567890ABCDEF1234569 /* AccessibilityExtensions.swift in Sources */,
+				B1234567890ABCDEF123456A /* ErrorHandler.swift in Sources */,
+				B1234567890ABCDEF123456B /* OptimizationHelpers.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		B412345E2B5A123500123456 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		B412345F2B5A123500123456 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		B41234612B5A123500123456 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS = NO;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Kurutto/Preview Content\"";
+				DEVELOPMENT_TEAM = 97C3699UZA;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Kurutto/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "くるっと";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.quon.kurutto;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		B41234622B5A123500123456 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS = NO;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Kurutto/Preview Content\"";
+				DEVELOPMENT_TEAM = 97C3699UZA;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Kurutto/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "くるっと";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.quon.kurutto;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		B412344D2B5A123400123456 /* Build configuration list for PBXProject "Kurutto" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B412345E2B5A123500123456 /* Debug */,
+				B412345F2B5A123500123456 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B41234602B5A123500123456 /* Build configuration list for PBXNativeTarget "Kurutto" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B41234612B5A123500123456 /* Debug */,
+				B41234622B5A123500123456 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		B412346F2B5A125500123456 /* Kurutto.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				B41234702B5A125500123456 /* Kurutto.xcdatamodel */,
+			);
+			currentVersion = B41234702B5A125500123456 /* Kurutto.xcdatamodel */;
+			path = Kurutto.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
+	};
+	rootObject = B412344A2B5A123400123456 /* Project object */;
+}

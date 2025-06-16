@@ -1,0 +1,130 @@
+import SwiftUI
+import SceneKit
+
+struct SceneView3D: UIViewRepresentable {
+    let scene: SCNScene
+    @Binding var selectedNode: String?
+    let onNodeTapped: ((String) -> Void)?
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    func makeUIView(context: Context) -> SCNView {
+        let scnView = SCNView()
+        scnView.scene = scene
+        scnView.backgroundColor = UIColor.clear
+        scnView.autoenablesDefaultLighting = false
+        scnView.allowsCameraControl = true
+        scnView.showsStatistics = false
+        
+        // カメラコントロールの設定
+        scnView.defaultCameraController.interactionMode = .orbitTurntable
+        scnView.defaultCameraController.inertiaEnabled = true
+        scnView.defaultCameraController.maximumVerticalAngle = 45
+        scnView.defaultCameraController.minimumVerticalAngle = -15
+        
+        // タップジェスチャーを追加
+        let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:)))
+        scnView.addGestureRecognizer(tapGesture)
+        
+        // パンジェスチャーを追加（手動回転用）
+        let panGesture = UIPanGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handlePan(_:)))
+        scnView.addGestureRecognizer(panGesture)
+        
+        return scnView
+    }
+    
+    func updateUIView(_ uiView: SCNView, context: Context) {
+        // 必要に応じて更新
+    }
+    
+    class Coordinator: NSObject {
+        var parent: SceneView3D
+        private var lastPanLocation: CGPoint = .zero
+        
+        init(_ parent: SceneView3D) {
+            self.parent = parent
+        }
+        
+        @objc func handleTap(_ gestureRecognizer: UITapGestureRecognizer) {
+            guard let scnView = gestureRecognizer.view as? SCNView else { return }
+            
+            let location = gestureRecognizer.location(in: scnView)
+            let hitResults = scnView.hitTest(location, options: [:])
+            
+            if let firstHit = hitResults.first {
+                var node: SCNNode? = firstHit.node
+                
+                // 親ノードを探して動物名を取得
+                while node != nil {
+                    if let nodeName = node?.name,
+                       AnimalType.allCases.contains(where: { $0.rawValue == nodeName }) {
+                        parent.selectedNode = nodeName
+                        parent.onNodeTapped?(nodeName)
+                        
+                        // タップフィードバック
+                        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+                        feedbackGenerator.impactOccurred()
+                        
+                        // タップアニメーション
+                        animateNodeTap(node!)
+                        break
+                    }
+                    node = node?.parent
+                }
+            }
+        }
+        
+        @objc func handlePan(_ gestureRecognizer: UIPanGestureRecognizer) {
+            guard let scnView = gestureRecognizer.view as? SCNView else { return }
+            
+            let location = gestureRecognizer.location(in: scnView)
+            
+            switch gestureRecognizer.state {
+            case .began:
+                lastPanLocation = location
+            case .changed:
+                let deltaX = Float(location.x - lastPanLocation.x)
+                let deltaY = Float(location.y - lastPanLocation.y)
+                
+                // ボードを回転
+                if let boardNode = scnView.scene?.rootNode.childNode(withName: "board", recursively: true) {
+                    boardNode.eulerAngles.y += deltaX * 0.01
+                }
+                
+                lastPanLocation = location
+            default:
+                break
+            }
+        }
+        
+        private func animateNodeTap(_ node: SCNNode) {
+            let scaleAction = SCNAction.sequence([
+                SCNAction.scale(to: 0.9, duration: 0.1),
+                SCNAction.scale(to: 1.1, duration: 0.1),
+                SCNAction.scale(to: 1.0, duration: 0.1)
+            ])
+            node.runAction(scaleAction)
+        }
+    }
+}
+
+// SceneView用のViewModifier
+struct SceneViewModifier: ViewModifier {
+    let cornerRadius: CGFloat
+    let shadow: Bool
+    
+    func body(content: Content) -> some View {
+        content
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+            )
+            .if(shadow) { view in
+                view.shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
+            }
+    }
+}
+
